@@ -48,6 +48,26 @@ class MongoAccountRepository(AccountRepository):
     def find_by_user_id(self, user_id: int) -> List[Account]:
         return [_to_account(doc) for doc in db.accounts.find({"user_id": user_id})]
 
+    def find_all(self) -> List[Account]:
+        return [_to_account(doc) for doc in db.accounts.find()]
+
+    def update(self, account_id: int, account_type: str) -> Optional[Account]:
+        result = db.accounts.update_one(
+            {"_id": account_id},
+            {"$set": {"account_type": account_type}},
+        )
+        if result.matched_count == 0:
+            return None
+        return self.find_by_id(account_id)
+
+    def delete(self, account_id: int) -> bool:
+        result = db.accounts.delete_one({"_id": account_id})
+        return result.deleted_count > 0
+
+    def find_premium(self, threshold: Decimal) -> List[Account]:
+        docs = db.accounts.find({"balance": {"$gte": Decimal128(threshold)}})
+        return [_to_account(doc) for doc in docs]
+
     def save(self, account: Account) -> Account:
         db.accounts.replace_one(
             {"_id": account.account_id},
