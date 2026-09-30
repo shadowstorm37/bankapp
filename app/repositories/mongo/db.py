@@ -28,14 +28,23 @@ def get_next_id(counter_name: str) -> int:
 
 
 def seed_users() -> None:
-    if users.count_documents({}) > 0:
-        return
-    users.insert_many(
-        [
-            {"_id": 1, "name": "John Doe", "email": "john@example.com"},
-            {"_id": 2, "name": "Jane Smith", "email": "jane@example.com"},
-        ]
+    if users.count_documents({}) == 0:
+        users.insert_many(
+            [
+                {"_id": 1, "name": "John Doe", "email": "john@example.com"},
+                {"_id": 2, "name": "Jane Smith", "email": "jane@example.com"},
+            ]
+        )
+
+    # Seed ids 1/2 are inserted directly above, bypassing get_next_id(). Make sure
+    # the "user_id" counter starts after them so the first real create() doesn't
+    # collide with a seeded id.
+    counters.update_one(
+        {"_id": "user_id"},
+        {"$setOnInsert": {"seq": 2}},
+        upsert=True,
     )
 
 
+users.create_index("email", unique=True)
 seed_users()

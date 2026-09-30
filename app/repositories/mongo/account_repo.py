@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 
 from bson.decimal128 import Decimal128
 
@@ -44,6 +44,9 @@ class MongoAccountRepository(AccountRepository):
         if doc is None:
             return None
         return _to_account(doc)
+
+    def find_by_user_id(self, user_id: int) -> List[Account]:
+        return [_to_account(doc) for doc in db.accounts.find({"user_id": user_id})]
 
     def save(self, account: Account) -> Account:
         db.accounts.replace_one(
