@@ -40,6 +40,22 @@ class AccountRepository(ABC):
         ...
 
     @abstractmethod
+    def find_all(self) -> List[Account]:
+        ...
+
+    @abstractmethod
+    def update(self, account_id: int, account_type: str) -> Optional[Account]:
+        ...
+
+    @abstractmethod
+    def delete(self, account_id: int) -> bool:
+        ...
+
+    @abstractmethod
+    def find_premium(self, threshold) -> List[Account]:
+        ...
+
+    @abstractmethod
     def save(self, account: Account) -> Account:
         ...
 

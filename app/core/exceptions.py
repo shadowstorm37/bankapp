@@ -16,3 +16,7 @@ class DuplicateEmailError(Exception):
 
 class CustomerHasAccountsError(Exception):
     pass
+
+
+class AccountHasBalanceError(Exception):
+    pass
