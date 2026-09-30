@@ -12,3 +12,7 @@ class InsufficientFundsError(Exception):
 
 class DuplicateEmailError(Exception):
     pass
+
+
+class CustomerHasAccountsError(Exception):
+    pass
