@@ -8,3 +8,7 @@ class ValidationError(Exception):
 
 class InsufficientFundsError(Exception):
     pass
+
+
+class DuplicateEmailError(Exception):
+    pass

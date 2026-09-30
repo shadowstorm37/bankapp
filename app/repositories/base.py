@@ -9,6 +9,22 @@ class UserRepository(ABC):
     def find_by_id(self, user_id: int) -> Optional[User]:
         ...
 
+    @abstractmethod
+    def find_all(self) -> List[User]:
+        ...
+
+    @abstractmethod
+    def create(self, name: str, email: str) -> User:
+        ...
+
+    @abstractmethod
+    def update(self, user_id: int, name: str, email: str) -> Optional[User]:
+        ...
+
+    @abstractmethod
+    def delete(self, user_id: int) -> bool:
+        ...
+
 
 class AccountRepository(ABC):
     @abstractmethod
@@ -17,6 +33,10 @@ class AccountRepository(ABC):
 
     @abstractmethod
     def find_by_id(self, account_id: int) -> Optional[Account]:
+        ...
+
+    @abstractmethod
+    def find_by_user_id(self, user_id: int) -> List[Account]:
         ...
 
     @abstractmethod
