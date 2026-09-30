@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 
 from app.models.entities import Account
 from app.repositories.base import AccountRepository
@@ -20,6 +20,9 @@ class InMemoryAccountRepository(AccountRepository):
 
     def find_by_id(self, account_id: int) -> Optional[Account]:
         return store.accounts.get(account_id)
+
+    def find_by_user_id(self, user_id: int) -> List[Account]:
+        return [a for a in store.accounts.values() if a.user_id == user_id]
 
     def save(self, account: Account) -> Account:
         store.accounts[account.account_id] = account

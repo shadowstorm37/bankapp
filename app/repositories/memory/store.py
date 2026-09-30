@@ -12,3 +12,4 @@ transactions: dict[int, "Transaction"] = {}
 
 next_account_id = 1
 next_txn_id = 1
+next_user_id = 3
