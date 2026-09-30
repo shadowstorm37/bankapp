@@ -1,14 +1,13 @@
 from functools import lru_cache
 
-from app.repositories.memory.account_repo import InMemoryAccountRepository
-from app.repositories.memory.transaction_repo import InMemoryTransactionRepository
-from app.repositories.memory.user_repo import InMemoryUserRepository
+from app.repositories.mongo.account_repo import MongoAccountRepository
+from app.repositories.mongo.transaction_repo import MongoTransactionRepository
+from app.repositories.mongo.user_repo import MongoUserRepository
 from app.services.account_service import AccountService
 
-# Single shared in-memory repos so data persists across requests within one process.
-_user_repo = InMemoryUserRepository()
-_account_repo = InMemoryAccountRepository()
-_transaction_repo = InMemoryTransactionRepository()
+_user_repo = MongoUserRepository()
+_account_repo = MongoAccountRepository()
+_transaction_repo = MongoTransactionRepository()
 
 
 @lru_cache
