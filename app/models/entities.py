@@ -44,4 +44,8 @@ class AuditEntry:
     to_account_id: Optional[int]
     amount: Decimal
     transaction_ids: List[int] = field(default_factory=list)
+    # who actually made the change (may be an admin acting on a customer's
+    # account); None on entries recorded before this was tracked
+    performed_by_id: Optional[int] = None
+    performed_by_name: Optional[str] = None  # snapshot, like user_name
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

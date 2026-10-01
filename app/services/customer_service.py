@@ -53,7 +53,8 @@ class CustomerService:
 
     def get_premium_customers(self, threshold: Decimal) -> List[User]:
         # a premium customer owns at least one account at or above the threshold
-        owner_ids = sorted({a.user_id for a in self.account_repo.find_premium(threshold)})
+        premium_accounts = self.account_repo.find_premium(threshold)
+        owner_ids = sorted({a.user_id for a in premium_accounts})
         users = [self.user_repo.find_by_id(uid) for uid in owner_ids]
         return [u for u in users if u is not None]
 

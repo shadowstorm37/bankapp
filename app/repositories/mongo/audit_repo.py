@@ -19,6 +19,9 @@ def _to_audit_entry(doc: dict) -> AuditEntry:
         to_account_id=doc.get("to_account_id"),
         amount=doc["amount"].to_decimal(),
         transaction_ids=doc["transaction_ids"],
+        # older entries don't have these fields
+        performed_by_id=doc.get("performed_by_id"),
+        performed_by_name=doc.get("performed_by_name"),
         created_at=doc["created_at"],
     )
 
@@ -33,6 +36,8 @@ class MongoAuditRepository(AuditRepository):
         to_account_id: Optional[int],
         amount: Decimal,
         transaction_ids: List[int],
+        performed_by_id: int,
+        performed_by_name: str,
     ) -> AuditEntry:
         entry = AuditEntry(
             audit_id=db.get_next_id("audit_id"),
@@ -43,6 +48,8 @@ class MongoAuditRepository(AuditRepository):
             to_account_id=to_account_id,
             amount=amount,
             transaction_ids=list(transaction_ids),
+            performed_by_id=performed_by_id,
+            performed_by_name=performed_by_name,
             created_at=datetime.now(timezone.utc),
         )
         db.audit.insert_one(
@@ -55,6 +62,8 @@ class MongoAuditRepository(AuditRepository):
                 "to_account_id": entry.to_account_id,
                 "amount": Decimal128(entry.amount),
                 "transaction_ids": entry.transaction_ids,
+                "performed_by_id": entry.performed_by_id,
+                "performed_by_name": entry.performed_by_name,
                 "created_at": entry.created_at,
             }
         )

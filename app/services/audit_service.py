@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import List, Optional
 
 from app.core.exceptions import NotFoundError
-from app.models.entities import AuditEntry
+from app.models.entities import AuditEntry, User
 from app.repositories.base import AuditRepository, UserRepository
 
 
@@ -19,7 +19,10 @@ class AuditService:
         to_account_id: Optional[int],
         amount: Decimal,
         transaction_ids: List[int],
+        performed_by: User,
     ) -> AuditEntry:
+        """user_id is the account owner; performed_by is whoever made the
+        change (the owner themselves, or an admin)."""
         user = self.user_repo.find_by_id(user_id)
         return self.audit_repo.create(
             action,
@@ -29,6 +32,8 @@ class AuditService:
             to_account_id,
             amount,
             transaction_ids,
+            performed_by.user_id,
+            performed_by.name,
         )
 
     def get_entry(self, audit_id: int) -> AuditEntry:

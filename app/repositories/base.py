@@ -97,6 +97,8 @@ class AuditRepository(ABC):
         to_account_id: Optional[int],
         amount,
         transaction_ids: List[int],
+        performed_by_id: int,
+        performed_by_name: str,
     ) -> AuditEntry:
         ...
 

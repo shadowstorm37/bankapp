@@ -1622,6 +1622,10 @@
                   "    pm.expect(e.userName).to.eql('Demo Customer Updated');",
                   "}));",
                   "pm.test('Failed operations left no entries', () => pm.expect(entries).to.have.lengthOf(3));",
+                  "pm.test('Performed by the admin who ran them, not the owner', () => entries.forEach(e => {",
+                  "    pm.expect(e.performedById).to.eql(Number(pm.collectionVariables.get('adminUserId')));",
+                  "    pm.expect(e.performedByName).to.eql('Administrator');",
+                  "}));",
                   "pm.collectionVariables.set('transferAuditId', entries[2].auditId);"
                 ]
               }
@@ -3402,7 +3406,48 @@
           ]
         },
         {
-          "name": "17. Customer Views Another Account (expect 403)",
+          "name": "17. Audit Shows The Customer Did It",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?accountId={{customerAccount}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{customerAccount}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const entries = pm.response.json();",
+                  "pm.test('Their deposit and transfer', () => pm.expect(entries.map(e => e.action)).to.eql(['DEPOSIT', 'TRANSFER']));",
+                  "pm.test('Owner and performer are both the customer', () => entries.forEach(e => {",
+                  "    pm.expect(e.userId).to.eql(Number(pm.collectionVariables.get('authUserId')));",
+                  "    pm.expect(e.performedById).to.eql(Number(pm.collectionVariables.get('authUserId')));",
+                  "    pm.expect(e.performedByName).to.eql('Login Tester Renamed');",
+                  "}));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18. Customer Views Another Account (expect 403)",
           "request": {
             "method": "GET",
             "header": [],
@@ -3442,7 +3487,7 @@
           ]
         },
         {
-          "name": "18. Customer Deposits Into Another Account (expect 403)",
+          "name": "19. Customer Deposits Into Another Account (expect 403)",
           "request": {
             "method": "POST",
             "header": [
@@ -3496,7 +3541,7 @@
           ]
         },
         {
-          "name": "19. Customer Transfers From Another Account (expect 403)",
+          "name": "20. Customer Transfers From Another Account (expect 403)",
           "request": {
             "method": "POST",
             "header": [
@@ -3550,7 +3595,7 @@
           ]
         },
         {
-          "name": "20. Customer Reads Another Account's History (expect 403)",
+          "name": "21. Customer Reads Another Account's History (expect 403)",
           "request": {
             "method": "GET",
             "header": [],
@@ -3590,7 +3635,7 @@
           ]
         },
         {
-          "name": "21. Customer Reads Audit Trail (expect 403)",
+          "name": "22. Customer Reads Audit Trail (expect 403)",
           "request": {
             "method": "GET",
             "header": [],
@@ -3628,7 +3673,7 @@
           ]
         },
         {
-          "name": "22. Customer Closes Own Account (expect 403)",
+          "name": "23. Customer Closes Own Account (expect 403)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -3667,7 +3712,7 @@
           ]
         },
         {
-          "name": "23. Unknown Account Is Still 404 For A Customer",
+          "name": "24. Unknown Account Is Still 404 For A Customer",
           "request": {
             "method": "GET",
             "header": [],
@@ -3706,7 +3751,7 @@
           ]
         },
         {
-          "name": "24. Admin Can't Delete An Admin (expect 409)",
+          "name": "25. Admin Can't Delete An Admin (expect 409)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -3736,7 +3781,7 @@
           ]
         },
         {
-          "name": "25. Admin Can't Close A Funded Account (expect 409)",
+          "name": "26. Admin Can't Close A Funded Account (expect 409)",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -3765,7 +3810,7 @@
           ]
         },
         {
-          "name": "26. Admin Empties Customer Account",
+          "name": "27. Admin Empties Customer Account",
           "request": {
             "method": "POST",
             "header": [
@@ -3810,7 +3855,48 @@
           ]
         },
         {
-          "name": "27. Admin Empties Other Account",
+          "name": "28. Audit Shows The Admin Emptied It",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?accountId={{customerAccount}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{customerAccount}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const last = pm.response.json().slice(-1)[0];",
+                  "pm.test('Customer\u2019s account, withdrawn by the admin', () => {",
+                  "    pm.expect(last.action).to.eql('WITHDRAW');",
+                  "    pm.expect(last.userId).to.eql(Number(pm.collectionVariables.get('authUserId')));",
+                  "    pm.expect(last.performedById).to.eql(Number(pm.collectionVariables.get('adminUserId')));",
+                  "    pm.expect(last.performedByName).to.eql('Administrator');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "29. Admin Empties Other Account",
           "request": {
             "method": "POST",
             "header": [
@@ -3855,7 +3941,7 @@
           ]
         },
         {
-          "name": "28. Admin Closes Customer Account",
+          "name": "30. Admin Closes Customer Account",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -3884,7 +3970,7 @@
           ]
         },
         {
-          "name": "29. Admin Closes Other Account",
+          "name": "31. Admin Closes Other Account",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -3913,7 +3999,7 @@
           ]
         },
         {
-          "name": "30. Admin Deletes The Customer",
+          "name": "32. Admin Deletes The Customer",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -3942,7 +4028,7 @@
           ]
         },
         {
-          "name": "31. Deleted Customer's Token Stops Working (expect 401)",
+          "name": "33. Deleted Customer's Token Stops Working (expect 401)",
           "request": {
             "method": "GET",
             "header": [],
@@ -3982,7 +4068,7 @@
           ]
         },
         {
-          "name": "32. Deleted Customer Can't Log In (expect 401)",
+          "name": "34. Deleted Customer Can't Log In (expect 401)",
           "request": {
             "method": "POST",
             "header": [

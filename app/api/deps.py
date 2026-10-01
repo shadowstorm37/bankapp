@@ -61,7 +61,9 @@ def get_current_user(
     # load the user on every request, so a deleted user's token stops working
     user = _user_repo.find_by_id(user_id)
     if user is None:
-        raise NotAuthenticatedError("Your account no longer exists. Please log in again.")
+        raise NotAuthenticatedError(
+            "Your account no longer exists. Please log in again."
+        )
     return user
 
 
@@ -71,7 +73,9 @@ def require_admin(current: User = Depends(get_current_user)) -> User:
     return current
 
 
-def require_self_or_admin(user_id: int, current: User = Depends(get_current_user)) -> User:
+def require_self_or_admin(
+    user_id: int, current: User = Depends(get_current_user)
+) -> User:
     """For /api/customers/{user_id}...: customers may only use their own id."""
     if current.role != "admin" and current.user_id != user_id:
         raise PermissionDeniedError("You can only access your own profile")

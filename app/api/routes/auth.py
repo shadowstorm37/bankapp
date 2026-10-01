@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends
 
 from app.api.deps import get_auth_service
-from app.schemas.auth import AuthUserResponse, LoginRequest, LoginResponse, RegisterRequest
+from app.schemas.auth import (
+    AuthUserResponse,
+    LoginRequest,
+    LoginResponse,
+    RegisterRequest,
+)
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])

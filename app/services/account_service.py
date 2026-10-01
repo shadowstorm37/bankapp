@@ -7,7 +7,7 @@ from app.core.exceptions import (
     NotFoundError,
     ValidationError,
 )
-from app.models.entities import Account, Transaction
+from app.models.entities import Account, Transaction, User
 from app.repositories.base import AccountRepository, TransactionRepository, UserRepository
 from app.services.audit_service import AuditService
 
@@ -36,7 +36,7 @@ class AccountService:
             raise NotFoundError(f"Account {account_id} not found")
         return account
 
-    def deposit(self, account_id: int, amount: Decimal) -> Account:
+    def deposit(self, account_id: int, amount: Decimal, performed_by: User) -> Account:
         if amount <= 0:
             raise ValidationError("Deposit amount must be positive")
 
@@ -45,11 +45,17 @@ class AccountService:
         self.account_repo.save(account)
         txn = self.transaction_repo.create(account_id, "DEPOSIT", amount)
         self.audit_service.record(
-            "DEPOSIT", account.user_id, None, account_id, amount, [txn.txn_id]
+            "DEPOSIT",
+            account.user_id,
+            None,
+            account_id,
+            amount,
+            [txn.txn_id],
+            performed_by,
         )
         return account
 
-    def withdraw(self, account_id: int, amount: Decimal) -> Account:
+    def withdraw(self, account_id: int, amount: Decimal, performed_by: User) -> Account:
         if amount <= 0:
             raise ValidationError("Withdraw amount must be positive")
 
@@ -61,7 +67,13 @@ class AccountService:
         self.account_repo.save(account)
         txn = self.transaction_repo.create(account_id, "WITHDRAW", amount)
         self.audit_service.record(
-            "WITHDRAW", account.user_id, account_id, None, amount, [txn.txn_id]
+            "WITHDRAW",
+            account.user_id,
+            account_id,
+            None,
+            amount,
+            [txn.txn_id],
+            performed_by,
         )
         return account
 
@@ -91,7 +103,7 @@ class AccountService:
         return self.account_repo.find_premium(threshold)
 
     def transfer(
-        self, from_id: int, to_id: int, amount: Decimal
+        self, from_id: int, to_id: int, amount: Decimal, performed_by: User
     ) -> Tuple[Account, Account]:
         if from_id == to_id:
             raise ValidationError("Cannot transfer to the same account")
@@ -118,5 +130,6 @@ class AccountService:
             to_id,
             amount,
             [out_txn.txn_id, in_txn.txn_id],
+            performed_by,
         )
         return from_account, to_account

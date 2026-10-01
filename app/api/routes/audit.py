@@ -22,6 +22,8 @@ def _to_audit_response(entry) -> AuditEntryResponse:
         toAccountId=entry.to_account_id,
         amount=entry.amount,
         transactionIds=entry.transaction_ids,
+        performedById=entry.performed_by_id,
+        performedByName=entry.performed_by_name,
         date=entry.created_at,
     )
 

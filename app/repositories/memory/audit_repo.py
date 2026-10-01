@@ -16,6 +16,8 @@ class InMemoryAuditRepository(AuditRepository):
         to_account_id: Optional[int],
         amount: Decimal,
         transaction_ids: List[int],
+        performed_by_id: int,
+        performed_by_name: str,
     ) -> AuditEntry:
         entry = AuditEntry(
             audit_id=store.next_audit_id,
@@ -27,6 +29,8 @@ class InMemoryAuditRepository(AuditRepository):
             amount=amount,
             # copy so later changes to the caller's list can't rewrite history
             transaction_ids=list(transaction_ids),
+            performed_by_id=performed_by_id,
+            performed_by_name=performed_by_name,
         )
         store.audit_entries[entry.audit_id] = entry
         store.next_audit_id += 1

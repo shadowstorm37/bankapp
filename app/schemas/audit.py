@@ -14,6 +14,9 @@ class AuditEntryResponse(BaseModel):
     toAccountId: Optional[int]
     amount: Decimal
     transactionIds: List[int]
+    # null on entries recorded before performedBy was tracked
+    performedById: Optional[int]
+    performedByName: Optional[str]
     date: datetime
 
     class Config:
