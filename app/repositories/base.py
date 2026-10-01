@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from app.models.entities import Account, Transaction, User
+from app.models.entities import Account, AuditEntry, Transaction, User
 
 
 class UserRepository(ABC):
@@ -67,4 +67,40 @@ class TransactionRepository(ABC):
 
     @abstractmethod
     def find_by_account_id(self, account_id: int) -> List[Transaction]:
+        ...
+
+
+class AuditRepository(ABC):
+    @abstractmethod
+    def create(
+        self,
+        action: str,
+        user_id: int,
+        user_name: str,
+        from_account_id: Optional[int],
+        to_account_id: Optional[int],
+        amount,
+        transaction_ids: List[int],
+    ) -> AuditEntry:
+        ...
+
+    @abstractmethod
+    def find_by_id(self, audit_id: int) -> Optional[AuditEntry]:
+        ...
+
+    @abstractmethod
+    def find_all(self) -> List[AuditEntry]:
+        ...
+
+    @abstractmethod
+    def find_by_account_id(self, account_id: int) -> List[AuditEntry]:
+        # matches entries where the account is either the source or the destination
+        ...
+
+    @abstractmethod
+    def find_by_user_id(self, user_id: int) -> List[AuditEntry]:
+        ...
+
+    @abstractmethod
+    def find_by_transaction_id(self, txn_id: int) -> Optional[AuditEntry]:
         ...

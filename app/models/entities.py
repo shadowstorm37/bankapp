@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
+from typing import List, Optional
 
 
 @dataclass
@@ -26,4 +27,17 @@ class Transaction:
     account_id: int
     txn_type: str  # "DEPOSIT" | "WITHDRAW"
     amount: Decimal
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class AuditEntry:
+    audit_id: int
+    action: str  # "DEPOSIT" | "WITHDRAW" | "TRANSFER"
+    user_id: int
+    user_name: str  # snapshot, so the entry stays readable if the customer changes
+    from_account_id: Optional[int]
+    to_account_id: Optional[int]
+    amount: Decimal
+    transaction_ids: List[int] = field(default_factory=list)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
