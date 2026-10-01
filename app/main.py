@@ -10,6 +10,7 @@ from app.api.routes.accounts import router as accounts_router
 from app.api.routes.audit import router as audit_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.customers import router as customers_router
+from app.api.routes.health import router as health_router
 from app.core.exceptions import (
     AccountHasBalanceError,
     AdminAccountProtectedError,
@@ -49,6 +50,7 @@ app.include_router(accounts_router)
 app.include_router(customers_router)
 app.include_router(audit_router)
 app.include_router(auth_router)
+app.include_router(health_router)
 
 
 @app.exception_handler(NotFoundError)

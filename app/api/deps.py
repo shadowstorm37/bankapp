@@ -7,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.exceptions import NotAuthenticatedError, PermissionDeniedError
 from app.core.security import decode_access_token
 from app.models.entities import Account, User
+from app.repositories.mongo import db
 from app.repositories.mongo.account_repo import MongoAccountRepository
 from app.repositories.mongo.audit_repo import MongoAuditRepository
 from app.repositories.mongo.transaction_repo import MongoTransactionRepository
@@ -93,3 +94,7 @@ def get_accessible_account(
     if current.role != "admin" and account.user_id != current.user_id:
         raise PermissionDeniedError("You can only access your own accounts")
     return account
+
+
+def check_database() -> bool:
+    return db.ping()

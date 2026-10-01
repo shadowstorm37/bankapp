@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
 from app import config
 
@@ -26,6 +27,15 @@ def get_next_id(counter_name: str) -> int:
         return_document=True,
     )
     return result["seq"]
+
+
+def ping() -> bool:
+    """True if the database answers. Used by GET /api/health."""
+    try:
+        client.admin.command("ping")
+        return True
+    except PyMongoError:
+        return False
 
 
 def seed_users() -> None:

@@ -98,8 +98,40 @@
   ],
   "item": [
     {
-      "name": "0. Log In As Admin",
+      "name": "0. Health & Admin Login",
       "item": [
+        {
+          "name": "0. Health Check (no login needed)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('API and database up', () => pm.expect(pm.response.json()).to.eql({status: 'ok', database: 'ok'}));"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "1. Log In As Admin",
           "request": {
