@@ -441,3 +441,23 @@ a {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
+/* Session area in the header */
+.session {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.hint {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.alert-info {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}

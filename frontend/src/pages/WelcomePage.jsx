@@ -14,7 +14,7 @@ const FEATURES = [
   },
   {
     title: 'Sign in',
-    description: 'Register with a username and password, then log in.',
+    description: 'Log in, or register with a username and password.',
     to: '/login',
   },
 ]

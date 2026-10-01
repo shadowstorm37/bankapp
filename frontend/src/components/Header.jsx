@@ -1,11 +1,9 @@
 import { Link, NavLink } from 'react-router-dom'
-
-const NAV_LINKS = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/customers', label: 'Customers' },
-]
+import useAuth from '../hooks/useAuth.js'
 
 export default function Header({ appName }) {
+  const { user, logout } = useAuth()
+
   return (
     <header className="header">
       <div className="header-inner">
@@ -14,12 +12,36 @@ export default function Header({ appName }) {
           {appName}
         </Link>
         <nav className="nav">
-          {NAV_LINKS.map((link) => (
-            <NavLink key={link.to} to={link.to} end={link.end} className="nav-link">
-              {link.label}
+          <NavLink to="/" end className="nav-link">
+            Home
+          </NavLink>
+          {user && (
+            <NavLink to="/customers" className="nav-link">
+              Customers
             </NavLink>
-          ))}
+          )}
         </nav>
+        <div className="session">
+          {user ? (
+            <>
+              <span className="muted">
+                Signed in as <strong>{user.name}</strong> ({user.role})
+              </span>
+              <button type="button" className="button button-secondary button-small" onClick={() => logout()}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/login" className="nav-link">
+                Log in
+              </NavLink>
+              <Link to="/register" className="button button-small">
+                Register
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   )

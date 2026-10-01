@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import ConfigError from './components/ConfigError.jsx'
+import AuthProvider from './context/AuthProvider.jsx'
 import { configProblems } from './config.js'
 
 createRoot(document.getElementById('root')).render(
@@ -12,7 +13,9 @@ createRoot(document.getElementById('root')).render(
       <ConfigError problems={configProblems} />
     ) : (
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     )}
   </StrictMode>,

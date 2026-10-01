@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { API_TIMEOUT_MS, API_URL } from '../config.js'
+import { getAccessToken } from './authStorage.js'
 
 // One Axios instance shared by every service, so the address, headers and
 // timeout are set in one place
@@ -8,6 +9,35 @@ const api = axios.create({
   timeout: API_TIMEOUT_MS,
   headers: { 'Content-Type': 'application/json' },
 })
+
+// Before every request: attach the login token, if there is one
+api.interceptors.request.use((request) => {
+  const token = getAccessToken()
+  if (token) {
+    request.headers.Authorization = `Bearer ${token}`
+  }
+  return request
+})
+
+// The auth context registers a function here to run when the API says the
+// login is no longer valid (expired token, deleted user)
+let onUnauthorized = null
+export function setUnauthorizedHandler(handler) {
+  onUnauthorized = handler
+}
+
+// After every response: a 401 means "log in again" - except on the login
+// request itself, where it just means a wrong username or password
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const isLoginRequest = error.config?.url === '/api/auth/login'
+    if (error.response?.status === 401 && !isLoginRequest && onUnauthorized) {
+      onUnauthorized(getErrorMessage(error))
+    }
+    return Promise.reject(error)
+  },
+)
 
 export default api
 
