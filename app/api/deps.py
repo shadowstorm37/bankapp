@@ -6,6 +6,7 @@ from app.repositories.mongo.transaction_repo import MongoTransactionRepository
 from app.repositories.mongo.user_repo import MongoUserRepository
 from app.services.account_service import AccountService
 from app.services.audit_service import AuditService
+from app.services.auth_service import AuthService
 from app.services.customer_service import CustomerService
 
 _user_repo = MongoUserRepository()
@@ -27,3 +28,8 @@ def get_customer_service() -> CustomerService:
 
 def get_audit_service() -> AuditService:
     return _audit_service
+
+
+@lru_cache
+def get_auth_service() -> AuthService:
+    return AuthService(_user_repo)

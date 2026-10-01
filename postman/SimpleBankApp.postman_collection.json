@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Simple Bank Application",
-    "description": "End-to-end tests for Customers, Accounts and the Audit Trail. Run the whole collection in order with the Collection Runner; each request saves the IDs the later ones need, and the last folder deletes everything it created.",
+    "description": "End-to-end tests for Customers, Accounts, the Audit Trail, and Registration/Login. Run the whole collection in order with the Collection Runner; each request saves the IDs the later ones need, and the last folder deletes everything it created.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -35,6 +35,22 @@
     },
     {
       "key": "transferAuditId",
+      "value": ""
+    },
+    {
+      "key": "authUsername",
+      "value": ""
+    },
+    {
+      "key": "authEmail",
+      "value": ""
+    },
+    {
+      "key": "authPassword",
+      "value": ""
+    },
+    {
+      "key": "authUserId",
       "value": ""
     }
   ],
@@ -740,7 +756,7 @@
       ]
     },
     {
-      "name": "3. Premium Accounts",
+      "name": "3. Premium & Search",
       "item": [
         {
           "name": "1. Premium Accounts (threshold 300)",
@@ -831,6 +847,187 @@
                 "api",
                 "accounts",
                 "premium"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Premium Customers (threshold 300)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/premium?threshold=300",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "premium"
+              ],
+              "query": [
+                {
+                  "key": "threshold",
+                  "value": "300"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().map(c => c.userId);",
+                  "pm.test('Owner of the funded account included', () =>",
+                  "    pm.expect(ids).to.include(Number(pm.collectionVariables.get('customerId'))));",
+                  "pm.test('Each customer listed once', () => pm.expect(new Set(ids).size).to.eql(ids.length));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Premium Customers Above Every Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/premium?threshold=999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "premium"
+              ],
+              "query": [
+                {
+                  "key": "threshold",
+                  "value": "999999999"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Empty list', () => pm.expect(pm.response.json()).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Search Customers By First Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/search?firstName=demo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "firstName",
+                  "value": "demo"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const found = pm.response.json();",
+                  "pm.test('Finds the demo customer (case-insensitive)', () =>",
+                  "    pm.expect(found.map(c => c.userId)).to.include(Number(pm.collectionVariables.get('customerId'))));",
+                  "pm.test('Every match has that first name', () =>",
+                  "    found.forEach(c => pm.expect(c.name.split(' ')[0].toLowerCase()).to.eql('demo')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Search By Last Name Finds Nothing",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/search?firstName=Updated",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "firstName",
+                  "value": "Updated"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Demo customer not matched by a later word', () =>",
+                  "    pm.expect(pm.response.json().map(c => c.userId)).to.not.include(Number(pm.collectionVariables.get('customerId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Search Without First Name (expect 422)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "search"
               ]
             }
           },
@@ -1876,6 +2073,403 @@
                   "const actions = pm.response.json().map(e => e.action);",
                   "pm.test('Checking history kept, including the cleanup withdrawal', () =>",
                   "    pm.expect(actions).to.eql(['DEPOSIT', 'WITHDRAW', 'TRANSFER', 'WITHDRAW']));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Registration & Login",
+      "item": [
+        {
+          "name": "1. Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Login Tester\",\n  \"email\": \"{{authEmail}}\",\n  \"username\": \"{{authUsername}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// fresh username and email each run",
+                  "const stamp = Date.now();",
+                  "pm.collectionVariables.set('authUsername', `tester_${stamp}`);",
+                  "pm.collectionVariables.set('authEmail', `tester.${stamp}@example.com`);",
+                  "pm.collectionVariables.set('authPassword', 'Demo-pass-123');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Returns the new customer with username', () =>",
+                  "    pm.expect(body.username).to.eql(pm.collectionVariables.get('authUsername')));",
+                  "pm.test('No password or hash in the response', () => {",
+                  "    pm.expect(body).to.not.have.property('password');",
+                  "    pm.expect(body).to.not.have.property('password_hash');",
+                  "    pm.expect(body).to.not.have.property('passwordHash');",
+                  "});",
+                  "pm.collectionVariables.set('authUserId', body.userId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Register Taken Username (expect 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Copy\",\n  \"email\": \"copy.{{authEmail}}\",\n  \"username\": \"{{authUsername}}\",\n  \"password\": \"Another-pass-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Error mentions \"already taken\"', () => pm.expect(pm.response.json().error).to.include('already taken'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Register Short Password (expect 422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Short\",\n  \"email\": \"short.{{authEmail}}\",\n  \"username\": \"short_{{authUsername}}\",\n  \"password\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{authUsername}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Logged in as the registered customer', () =>",
+                  "    pm.expect(pm.response.json().userId).to.eql(Number(pm.collectionVariables.get('authUserId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Login Wrong Password (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{authUsername}}\",\n  \"password\": \"Wrong-pass-123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error mentions \"Invalid username or password\"', () => pm.expect(pm.response.json().error).to.include('Invalid username or password'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Login Unknown Username (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"no_such_user_{{authUsername}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Same message as a wrong password', () =>",
+                  "    pm.expect(pm.response.json().error).to.eql('Invalid username or password'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Registered User Is A Customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{authUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "{{authUserId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Visible through the customer API, without login fields', () => {",
+                  "    const c = pm.response.json();",
+                  "    pm.expect(c.email).to.eql(pm.collectionVariables.get('authEmail'));",
+                  "    pm.expect(Object.keys(c).sort()).to.eql(['email', 'name', 'userId']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Delete Registered User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{authUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "{{authUserId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Login After Deletion (expect 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{authUsername}}\",\n  \"password\": \"{{authPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));"
                 ]
               }
             }

@@ -1,6 +1,7 @@
+from decimal import Decimal
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import get_customer_service
 from app.schemas.customer import CreateCustomerRequest, CustomerResponse, UpdateCustomerRequest
@@ -16,6 +17,26 @@ def _to_customer_response(user) -> CustomerResponse:
 @router.get("", response_model=List[CustomerResponse])
 def list_customers(service: CustomerService = Depends(get_customer_service)):
     return [_to_customer_response(u) for u in service.list_customers()]
+
+
+# /search and /premium must be registered before /{user_id}, or FastAPI parses
+# "search"/"premium" as a user_id
+@router.get("/search", response_model=List[CustomerResponse])
+def search_customers(
+    firstName: str = Query(min_length=1),
+    service: CustomerService = Depends(get_customer_service),
+):
+    return [_to_customer_response(u) for u in service.find_by_first_name(firstName)]
+
+
+@router.get("/premium", response_model=List[CustomerResponse])
+def get_premium_customers(
+    threshold: Decimal = Query(ge=0),
+    service: CustomerService = Depends(get_customer_service),
+):
+    return [
+        _to_customer_response(u) for u in service.get_premium_customers(threshold)
+    ]
 
 
 @router.get("/{user_id}", response_model=CustomerResponse)

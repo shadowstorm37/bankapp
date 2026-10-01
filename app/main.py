@@ -1,23 +1,37 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app import config
 from app.api.routes.accounts import router as accounts_router
 from app.api.routes.audit import router as audit_router
+from app.api.routes.auth import router as auth_router
 from app.api.routes.customers import router as customers_router
 from app.core.exceptions import (
     AccountHasBalanceError,
     CustomerHasAccountsError,
     DuplicateEmailError,
+    DuplicateUsernameError,
     InsufficientFundsError,
+    InvalidCredentialsError,
     NotFoundError,
     ValidationError,
 )
 
 app = FastAPI(title="Simple Bank Application")
 
+# lets the React dev server (a different origin) call the API from the browser
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.CORS_ORIGINS,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(accounts_router)
 app.include_router(customers_router)
 app.include_router(audit_router)
+app.include_router(auth_router)
 
 
 @app.exception_handler(NotFoundError)
@@ -48,3 +62,13 @@ def handle_customer_has_accounts(request: Request, exc: CustomerHasAccountsError
 @app.exception_handler(AccountHasBalanceError)
 def handle_account_has_balance(request: Request, exc: AccountHasBalanceError):
     return JSONResponse(status_code=409, content={"error": str(exc)})
+
+
+@app.exception_handler(DuplicateUsernameError)
+def handle_duplicate_username(request: Request, exc: DuplicateUsernameError):
+    return JSONResponse(status_code=409, content={"error": str(exc)})
+
+
+@app.exception_handler(InvalidCredentialsError)
+def handle_invalid_credentials(request: Request, exc: InvalidCredentialsError):
+    return JSONResponse(status_code=401, content={"error": str(exc)})
