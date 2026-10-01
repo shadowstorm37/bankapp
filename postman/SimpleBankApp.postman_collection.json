@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Simple Bank Application",
-    "description": "End-to-end tests for Customers and Accounts. Run the whole collection in order with the Collection Runner; each request saves the IDs the later ones need, and the last folder deletes everything it created.",
+    "description": "End-to-end tests for Customers, Accounts and the Audit Trail. Run the whole collection in order with the Collection Runner; each request saves the IDs the later ones need, and the last folder deletes everything it created.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -23,6 +23,18 @@
     },
     {
       "key": "accountB",
+      "value": ""
+    },
+    {
+      "key": "depositTxnId",
+      "value": ""
+    },
+    {
+      "key": "transferInTxnId",
+      "value": ""
+    },
+    {
+      "key": "transferAuditId",
       "value": ""
     }
   ],
@@ -1133,7 +1145,9 @@
                 "exec": [
                   "pm.test('Status is 200', () => pm.response.to.have.status(200));",
                   "pm.test('DEPOSIT, WITHDRAW, TRANSFER_OUT in order', () =>",
-                  "    pm.expect(pm.response.json().map(t => t.type)).to.eql(['DEPOSIT', 'WITHDRAW', 'TRANSFER_OUT']));"
+                  "    pm.expect(pm.response.json().map(t => t.type)).to.eql(['DEPOSIT', 'WITHDRAW', 'TRANSFER_OUT']));",
+                  "// keep the deposit's transaction id so the audit folder can trace it",
+                  "pm.collectionVariables.set('depositTxnId', pm.response.json()[0].txnId);"
                 ]
               }
             }
@@ -1168,7 +1182,8 @@
                   "    const txns = pm.response.json();",
                   "    pm.expect(txns.map(t => t.type)).to.eql(['TRANSFER_IN']);",
                   "    pm.expect(Number(txns[0].amount)).to.eql(150);",
-                  "});"
+                  "});",
+                  "pm.collectionVariables.set('transferInTxnId', pm.response.json()[0].txnId);"
                 ]
               }
             }
@@ -1177,7 +1192,363 @@
       ]
     },
     {
-      "name": "5. Delete Rules & Cleanup",
+      "name": "5. Audit Trail",
+      "item": [
+        {
+          "name": "1. Audit For Checking Account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?accountId={{accountA}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{accountA}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const entries = pm.response.json();",
+                  "pm.test('Deposit, withdraw and transfer in order', () =>",
+                  "    pm.expect(entries.map(e => e.action)).to.eql(['DEPOSIT', 'WITHDRAW', 'TRANSFER']));",
+                  "pm.test('Who = account owner', () => entries.forEach(e => {",
+                  "    pm.expect(e.userId).to.eql(Number(pm.collectionVariables.get('customerId')));",
+                  "    pm.expect(e.userName).to.eql('Demo Customer Updated');",
+                  "}));",
+                  "pm.test('Failed operations left no entries', () => pm.expect(entries).to.have.lengthOf(3));",
+                  "pm.collectionVariables.set('transferAuditId', entries[2].auditId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Audit For Savings Account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?accountId={{accountB}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{accountB}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Only the incoming transfer', () =>",
+                  "    pm.expect(pm.response.json().map(e => e.auditId)).to.eql([Number(pm.collectionVariables.get('transferAuditId'))]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Audit For Customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?userId={{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('All three entries belong to the customer', () => pm.expect(pm.response.json()).to.have.lengthOf(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Audit Entry By Id (transfer)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/{{transferAuditId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit",
+                "{{transferAuditId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const e = pm.response.json();",
+                  "pm.test('Both accounts involved', () => {",
+                  "    pm.expect(e.fromAccountId).to.eql(Number(pm.collectionVariables.get('accountA')));",
+                  "    pm.expect(e.toAccountId).to.eql(Number(pm.collectionVariables.get('accountB')));",
+                  "});",
+                  "pm.test('Amount and timestamp present', () => {",
+                  "    pm.expect(Number(e.amount)).to.eql(150);",
+                  "    pm.expect(Date.parse(e.date)).to.not.be.NaN;",
+                  "});",
+                  "pm.test('Links both halves of the transfer', () =>",
+                  "    pm.expect(e.transactionIds).to.include(Number(pm.collectionVariables.get('transferInTxnId'))).and.have.lengthOf(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Trace Savings TRANSFER_IN Transaction",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/transactions/{{transferInTxnId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit",
+                "transactions",
+                "{{transferInTxnId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Leads back to the transfer entry', () =>",
+                  "    pm.expect(pm.response.json().auditId).to.eql(Number(pm.collectionVariables.get('transferAuditId'))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Trace Checking DEPOSIT Transaction",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/transactions/{{depositTxnId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit",
+                "transactions",
+                "{{depositTxnId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const e = pm.response.json();",
+                  "pm.test('Deposit into checking, no source account', () => {",
+                  "    pm.expect(e.action).to.eql('DEPOSIT');",
+                  "    pm.expect(e.fromAccountId).to.be.null;",
+                  "    pm.expect(e.toAccountId).to.eql(Number(pm.collectionVariables.get('accountA')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Unknown Audit Entry (expect 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit",
+                "999999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Trace Unknown Transaction (expect 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit/transactions/999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit",
+                "transactions",
+                "999999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error mentions \"No audit entry\"', () => pm.expect(pm.response.json().error).to.include('No audit entry'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Audit For Unknown Account (empty list)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?accountId=999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "999999999"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Empty list', () => pm.expect(pm.response.json()).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Audit With Non-Numeric Filter (expect 422)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?accountId=abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "abc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Delete Rules & Cleanup",
       "item": [
         {
           "name": "1. Delete Customer With Accounts (expect 409)",
@@ -1468,6 +1839,43 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Audit Survives Deletion",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit?accountId={{accountA}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "accountId",
+                  "value": "{{accountA}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const actions = pm.response.json().map(e => e.action);",
+                  "pm.test('Checking history kept, including the cleanup withdrawal', () =>",
+                  "    pm.expect(actions).to.eql(['DEPOSIT', 'WITHDRAW', 'TRANSFER', 'WITHDRAW']));"
                 ]
               }
             }

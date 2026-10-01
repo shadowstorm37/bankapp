@@ -23,3 +23,7 @@ def get_account_service() -> AccountService:
 @lru_cache
 def get_customer_service() -> CustomerService:
     return CustomerService(_user_repo, _account_repo)
+
+
+def get_audit_service() -> AuditService:
+    return _audit_service

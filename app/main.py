@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.api.routes.accounts import router as accounts_router
+from app.api.routes.audit import router as audit_router
 from app.api.routes.customers import router as customers_router
 from app.core.exceptions import (
     AccountHasBalanceError,
@@ -16,6 +17,7 @@ app = FastAPI(title="Simple Bank Application")
 
 app.include_router(accounts_router)
 app.include_router(customers_router)
+app.include_router(audit_router)
 
 
 @app.exception_handler(NotFoundError)
