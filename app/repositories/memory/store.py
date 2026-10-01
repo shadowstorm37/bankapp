@@ -9,7 +9,9 @@ users: dict[int, User] = {
 
 accounts: dict[int, "Account"] = {}
 transactions: dict[int, "Transaction"] = {}
+audit_entries: dict[int, "AuditEntry"] = {}
 
 next_account_id = 1
 next_txn_id = 1
 next_user_id = 3
+next_audit_id = 1
