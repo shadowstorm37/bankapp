@@ -32,3 +32,11 @@ class InvalidCredentialsError(Exception):
 
 class NotAuthenticatedError(Exception):
     pass
+
+
+class PermissionDeniedError(Exception):
+    pass
+
+
+class AdminAccountProtectedError(Exception):
+    pass

@@ -2,11 +2,14 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 
-from app.api.deps import get_audit_service
+from app.api.deps import get_audit_service, require_admin
 from app.schemas.audit import AuditEntryResponse
 from app.services.audit_service import AuditService
 
-router = APIRouter(prefix="/api/audit", tags=["audit"])
+# the whole audit trail is admin-only
+router = APIRouter(
+    prefix="/api/audit", tags=["audit"], dependencies=[Depends(require_admin)]
+)
 
 
 def _to_audit_response(entry) -> AuditEntryResponse:

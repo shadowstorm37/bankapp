@@ -12,6 +12,7 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.customers import router as customers_router
 from app.core.exceptions import (
     AccountHasBalanceError,
+    AdminAccountProtectedError,
     CustomerHasAccountsError,
     DuplicateEmailError,
     DuplicateUsernameError,
@@ -19,6 +20,7 @@ from app.core.exceptions import (
     InvalidCredentialsError,
     NotAuthenticatedError,
     NotFoundError,
+    PermissionDeniedError,
     ValidationError,
 )
 
@@ -92,3 +94,13 @@ def handle_invalid_credentials(request: Request, exc: InvalidCredentialsError):
 @app.exception_handler(NotAuthenticatedError)
 def handle_not_authenticated(request: Request, exc: NotAuthenticatedError):
     return JSONResponse(status_code=401, content={"error": str(exc)})
+
+
+@app.exception_handler(PermissionDeniedError)
+def handle_permission_denied(request: Request, exc: PermissionDeniedError):
+    return JSONResponse(status_code=403, content={"error": str(exc)})
+
+
+@app.exception_handler(AdminAccountProtectedError)
+def handle_admin_protected(request: Request, exc: AdminAccountProtectedError):
+    return JSONResponse(status_code=409, content={"error": str(exc)})

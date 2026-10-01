@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import get_customer_service
+from app.api.deps import get_customer_service, require_admin, require_self_or_admin
 from app.schemas.account import AccountResponse
 from app.schemas.customer import CreateCustomerRequest, CustomerResponse, UpdateCustomerRequest
 from app.services.customer_service import CustomerService
@@ -15,14 +15,14 @@ def _to_customer_response(user) -> CustomerResponse:
     return CustomerResponse(userId=user.user_id, name=user.name, email=user.email)
 
 
-@router.get("", response_model=List[CustomerResponse])
+@router.get("", response_model=List[CustomerResponse], dependencies=[Depends(require_admin)])
 def list_customers(service: CustomerService = Depends(get_customer_service)):
     return [_to_customer_response(u) for u in service.list_customers()]
 
 
 # /search and /premium must be registered before /{user_id}, or FastAPI parses
 # "search"/"premium" as a user_id
-@router.get("/search", response_model=List[CustomerResponse])
+@router.get("/search", response_model=List[CustomerResponse], dependencies=[Depends(require_admin)])
 def search_customers(
     firstName: str = Query(min_length=1),
     service: CustomerService = Depends(get_customer_service),
@@ -30,7 +30,7 @@ def search_customers(
     return [_to_customer_response(u) for u in service.find_by_first_name(firstName)]
 
 
-@router.get("/premium", response_model=List[CustomerResponse])
+@router.get("/premium", response_model=List[CustomerResponse], dependencies=[Depends(require_admin)])
 def get_premium_customers(
     threshold: Decimal = Query(ge=0),
     service: CustomerService = Depends(get_customer_service),
@@ -40,7 +40,7 @@ def get_premium_customers(
     ]
 
 
-@router.get("/{user_id}", response_model=CustomerResponse)
+@router.get("/{user_id}", response_model=CustomerResponse, dependencies=[Depends(require_self_or_admin)])
 def get_customer(
     user_id: int,
     service: CustomerService = Depends(get_customer_service),
@@ -48,7 +48,7 @@ def get_customer(
     return _to_customer_response(service.get_customer(user_id))
 
 
-@router.get("/{user_id}/accounts", response_model=List[AccountResponse])
+@router.get("/{user_id}/accounts", response_model=List[AccountResponse], dependencies=[Depends(require_self_or_admin)])
 def get_customer_accounts(
     user_id: int,
     service: CustomerService = Depends(get_customer_service),
@@ -65,7 +65,7 @@ def get_customer_accounts(
     ]
 
 
-@router.post("", response_model=CustomerResponse, status_code=201)
+@router.post("", response_model=CustomerResponse, status_code=201, dependencies=[Depends(require_admin)])
 def create_customer(
     body: CreateCustomerRequest,
     service: CustomerService = Depends(get_customer_service),
@@ -74,7 +74,7 @@ def create_customer(
     return _to_customer_response(user)
 
 
-@router.put("/{user_id}", response_model=CustomerResponse)
+@router.put("/{user_id}", response_model=CustomerResponse, dependencies=[Depends(require_self_or_admin)])
 def update_customer(
     user_id: int,
     body: UpdateCustomerRequest,
@@ -84,7 +84,7 @@ def update_customer(
     return _to_customer_response(user)
 
 
-@router.delete("/{user_id}", status_code=204)
+@router.delete("/{user_id}", status_code=204, dependencies=[Depends(require_admin)])
 def delete_customer(
     user_id: int,
     service: CustomerService = Depends(get_customer_service),

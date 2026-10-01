@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import get_account_service
+from app.api.deps import get_accessible_account, get_account_service, require_admin
 from app.schemas.account import (
     AccountResponse,
     AmountRequest,
@@ -17,6 +17,10 @@ from app.services.account_service import AccountService
 
 router = APIRouter(prefix="/api/accounts", tags=["accounts"])
 
+# Admin-only routes use require_admin. Routes on one account use
+# get_accessible_account: the owner or an admin. For a transfer that's the
+# source account; the destination can belong to anyone.
+
 
 def _to_account_response(account, service: AccountService) -> AccountResponse:
     user = service.user_repo.find_by_id(account.user_id)
@@ -28,7 +32,7 @@ def _to_account_response(account, service: AccountService) -> AccountResponse:
     )
 
 
-@router.post("", response_model=AccountResponse, status_code=201)
+@router.post("", response_model=AccountResponse, status_code=201, dependencies=[Depends(require_admin)])
 def create_account(
     body: CreateAccountRequest,
     service: AccountService = Depends(get_account_service),
@@ -37,13 +41,13 @@ def create_account(
     return _to_account_response(account, service)
 
 
-@router.get("", response_model=List[AccountResponse])
+@router.get("", response_model=List[AccountResponse], dependencies=[Depends(require_admin)])
 def list_accounts(service: AccountService = Depends(get_account_service)):
     return [_to_account_response(a, service) for a in service.list_accounts()]
 
 
 # must be registered before /{account_id}, or "premium" is parsed as an account_id
-@router.get("/premium", response_model=List[AccountResponse])
+@router.get("/premium", response_model=List[AccountResponse], dependencies=[Depends(require_admin)])
 def get_premium_accounts(
     threshold: Decimal = Query(ge=0),
     service: AccountService = Depends(get_account_service),
@@ -54,7 +58,7 @@ def get_premium_accounts(
     ]
 
 
-@router.get("/{account_id}", response_model=AccountResponse)
+@router.get("/{account_id}", response_model=AccountResponse, dependencies=[Depends(get_accessible_account)])
 def get_account(
     account_id: int,
     service: AccountService = Depends(get_account_service),
@@ -63,7 +67,7 @@ def get_account(
     return _to_account_response(account, service)
 
 
-@router.put("/{account_id}", response_model=AccountResponse)
+@router.put("/{account_id}", response_model=AccountResponse, dependencies=[Depends(require_admin)])
 def update_account(
     account_id: int,
     body: UpdateAccountRequest,
@@ -73,7 +77,7 @@ def update_account(
     return _to_account_response(account, service)
 
 
-@router.delete("/{account_id}", status_code=204)
+@router.delete("/{account_id}", status_code=204, dependencies=[Depends(require_admin)])
 def delete_account(
     account_id: int,
     service: AccountService = Depends(get_account_service),
@@ -81,7 +85,7 @@ def delete_account(
     service.delete_account(account_id)
 
 
-@router.post("/{account_id}/deposit", response_model=AccountResponse)
+@router.post("/{account_id}/deposit", response_model=AccountResponse, dependencies=[Depends(get_accessible_account)])
 def deposit(
     account_id: int,
     body: AmountRequest,
@@ -91,7 +95,7 @@ def deposit(
     return _to_account_response(account, service)
 
 
-@router.post("/{account_id}/withdraw", response_model=AccountResponse)
+@router.post("/{account_id}/withdraw", response_model=AccountResponse, dependencies=[Depends(get_accessible_account)])
 def withdraw(
     account_id: int,
     body: AmountRequest,
@@ -101,7 +105,7 @@ def withdraw(
     return _to_account_response(account, service)
 
 
-@router.post("/{account_id}/transfer", response_model=TransferResponse)
+@router.post("/{account_id}/transfer", response_model=TransferResponse, dependencies=[Depends(get_accessible_account)])
 def transfer(
     account_id: int,
     body: TransferRequest,
@@ -116,7 +120,7 @@ def transfer(
     )
 
 
-@router.get("/{account_id}/transactions", response_model=list[TransactionResponse])
+@router.get("/{account_id}/transactions", response_model=list[TransactionResponse], dependencies=[Depends(get_accessible_account)])
 def get_transactions(
     account_id: int,
     service: AccountService = Depends(get_account_service),

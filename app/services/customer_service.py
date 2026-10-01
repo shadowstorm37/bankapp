@@ -1,7 +1,11 @@
 from decimal import Decimal
 from typing import List, Tuple
 
-from app.core.exceptions import CustomerHasAccountsError, NotFoundError
+from app.core.exceptions import (
+    AdminAccountProtectedError,
+    CustomerHasAccountsError,
+    NotFoundError,
+)
 from app.models.entities import Account, User
 from app.repositories.base import AccountRepository, UserRepository
 
@@ -30,7 +34,10 @@ class CustomerService:
         return user
 
     def delete_customer(self, user_id: int) -> None:
-        self.get_customer(user_id)
+        user = self.get_customer(user_id)
+        # deleting the admin would leave nobody able to manage the bank
+        if user.role == "admin":
+            raise AdminAccountProtectedError("Admin accounts can't be deleted")
 
         existing_accounts = self.account_repo.find_by_user_id(user_id)
         if existing_accounts:
