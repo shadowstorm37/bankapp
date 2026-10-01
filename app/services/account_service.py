@@ -9,6 +9,7 @@ from app.core.exceptions import (
 )
 from app.models.entities import Account, Transaction
 from app.repositories.base import AccountRepository, TransactionRepository, UserRepository
+from app.services.audit_service import AuditService
 
 
 class AccountService:
@@ -17,10 +18,12 @@ class AccountService:
         user_repo: UserRepository,
         account_repo: AccountRepository,
         transaction_repo: TransactionRepository,
+        audit_service: AuditService,
     ):
         self.user_repo = user_repo
         self.account_repo = account_repo
         self.transaction_repo = transaction_repo
+        self.audit_service = audit_service
 
     def create_account(self, user_id: int, account_type: str) -> Account:
         if self.user_repo.find_by_id(user_id) is None:
@@ -40,7 +43,10 @@ class AccountService:
         account = self.get_account(account_id)
         account.balance += amount
         self.account_repo.save(account)
-        self.transaction_repo.create(account_id, "DEPOSIT", amount)
+        txn = self.transaction_repo.create(account_id, "DEPOSIT", amount)
+        self.audit_service.record(
+            "DEPOSIT", account.user_id, None, account_id, amount, [txn.txn_id]
+        )
         return account
 
     def withdraw(self, account_id: int, amount: Decimal) -> Account:
@@ -53,7 +59,10 @@ class AccountService:
 
         account.balance -= amount
         self.account_repo.save(account)
-        self.transaction_repo.create(account_id, "WITHDRAW", amount)
+        txn = self.transaction_repo.create(account_id, "WITHDRAW", amount)
+        self.audit_service.record(
+            "WITHDRAW", account.user_id, account_id, None, amount, [txn.txn_id]
+        )
         return account
 
     def get_transactions(self, account_id: int) -> list[Transaction]:
@@ -99,6 +108,15 @@ class AccountService:
         to_account.balance += amount
         self.account_repo.save(from_account)
         self.account_repo.save(to_account)
-        self.transaction_repo.create(from_id, "TRANSFER_OUT", amount)
-        self.transaction_repo.create(to_id, "TRANSFER_IN", amount)
+        out_txn = self.transaction_repo.create(from_id, "TRANSFER_OUT", amount)
+        in_txn = self.transaction_repo.create(to_id, "TRANSFER_IN", amount)
+        # one entry links both halves; "who" is the owner of the source account
+        self.audit_service.record(
+            "TRANSFER",
+            from_account.user_id,
+            from_id,
+            to_id,
+            amount,
+            [out_txn.txn_id, in_txn.txn_id],
+        )
         return from_account, to_account
