@@ -1,6 +1,9 @@
 import { Link, NavLink } from 'react-router-dom'
 
-const NAV_LINKS = [{ to: '/', label: 'Home' }]
+const NAV_LINKS = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/customers', label: 'Customers' },
+]
 
 export default function Header({ appName }) {
   return (
@@ -12,7 +15,7 @@ export default function Header({ appName }) {
         </Link>
         <nav className="nav">
           {NAV_LINKS.map((link) => (
-            <NavLink key={link.to} to={link.to} end className="nav-link">
+            <NavLink key={link.to} to={link.to} end={link.end} className="nav-link">
               {link.label}
             </NavLink>
           ))}

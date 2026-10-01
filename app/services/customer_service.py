@@ -1,8 +1,8 @@
 from decimal import Decimal
-from typing import List
+from typing import List, Tuple
 
 from app.core.exceptions import CustomerHasAccountsError, NotFoundError
-from app.models.entities import User
+from app.models.entities import Account, User
 from app.repositories.base import AccountRepository, UserRepository
 
 
@@ -49,3 +49,8 @@ class CustomerService:
         owner_ids = sorted({a.user_id for a in self.account_repo.find_premium(threshold)})
         users = [self.user_repo.find_by_id(uid) for uid in owner_ids]
         return [u for u in users if u is not None]
+
+    def get_customer_accounts(self, user_id: int) -> Tuple[User, List[Account]]:
+        # 404 for an unknown customer, instead of an empty list
+        user = self.get_customer(user_id)
+        return user, self.account_repo.find_by_user_id(user_id)

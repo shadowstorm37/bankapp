@@ -48,6 +48,8 @@ def seed_users() -> None:
 
 
 users.create_index("email", unique=True)
+# a customer's accounts: the delete-customer check and GET /customers/{id}/accounts
+accounts.create_index("user_id")
 # partial: customers without a login have no username field, so they don't clash
 users.create_index(
     "username",

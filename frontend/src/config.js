@@ -16,6 +16,22 @@ if (!env.VITE_API_TIMEOUT_MS) {
   problems.push('VITE_API_TIMEOUT_MS must be a whole number of milliseconds')
 }
 
+const currency = env.VITE_CURRENCY?.trim()
+const locale = env.VITE_LOCALE?.trim()
+if (!currency) problems.push('VITE_CURRENCY is not set')
+if (!locale) problems.push('VITE_LOCALE is not set')
+
+// Intl throws on an unknown currency or locale, so check them once here
+let moneyFormat = null
+if (currency && locale) {
+  try {
+    moneyFormat = new Intl.NumberFormat(locale, { style: 'currency', currency })
+  } catch {
+    problems.push(`VITE_CURRENCY "${currency}" or VITE_LOCALE "${locale}" isn't valid`)
+  }
+}
+
 export const configProblems = problems
+export const MONEY_FORMAT = moneyFormat
 export const API_URL = apiUrl ? apiUrl.replace(/\/+$/, '') : ''
 export const API_TIMEOUT_MS = timeoutMs

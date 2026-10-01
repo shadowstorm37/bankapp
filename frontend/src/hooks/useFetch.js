@@ -35,5 +35,7 @@ export default function useFetch(fetchFn, deps = []) {
   // lets a "Try again" button run the same request again
   const reload = useCallback(() => setAttempt((n) => n + 1), [])
 
-  return { data, loading, error, reload }
+  // setData lets a page update what it shows (e.g. remove a deleted row)
+  // without fetching everything again
+  return { data, setData, loading, error, reload }
 }

@@ -8,6 +8,10 @@ const customerService = {
   getById: (id, { signal } = {}) =>
     api.get(`/api/customers/${id}`, { signal }).then((r) => r.data),
 
+  // GET /api/customers/{id}/accounts: that customer's accounts ([] if none)
+  getAccounts: (id, { signal } = {}) =>
+    api.get(`/api/customers/${id}/accounts`, { signal }).then((r) => r.data),
+
   create: (customer) => api.post('/api/customers', customer).then((r) => r.data),
 
   update: (id, customer) => api.put(`/api/customers/${id}`, customer).then((r) => r.data),

@@ -4,6 +4,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import get_customer_service
+from app.schemas.account import AccountResponse
 from app.schemas.customer import CreateCustomerRequest, CustomerResponse, UpdateCustomerRequest
 from app.services.customer_service import CustomerService
 
@@ -45,6 +46,23 @@ def get_customer(
     service: CustomerService = Depends(get_customer_service),
 ):
     return _to_customer_response(service.get_customer(user_id))
+
+
+@router.get("/{user_id}/accounts", response_model=List[AccountResponse])
+def get_customer_accounts(
+    user_id: int,
+    service: CustomerService = Depends(get_customer_service),
+):
+    user, accounts = service.get_customer_accounts(user_id)
+    return [
+        AccountResponse(
+            accountId=a.account_id,
+            userName=user.name,
+            accountType=a.account_type,
+            balance=a.balance,
+        )
+        for a in accounts
+    ]
 
 
 @router.post("", response_model=CustomerResponse, status_code=201)

@@ -289,6 +289,67 @@
               }
             }
           ]
+        },
+        {
+          "name": "7. Customer Accounts Before Opening Any",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{customerId}}/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "{{customerId}}",
+                "accounts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Empty list, not 404', () => pm.expect(pm.response.json()).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Accounts Of Unknown Customer (expect 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/999999999/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "999999999",
+                "accounts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -383,7 +444,42 @@
           ]
         },
         {
-          "name": "3. Create Account - Unknown Customer (expect 404)",
+          "name": "3. Customer Accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{customerId}}/accounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "{{customerId}}",
+                "accounts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const accts = pm.response.json();",
+                  "pm.test('Both new accounts, nobody else's', () =>",
+                  "    pm.expect(accts.map(a => a.accountId).sort((x, y) => x - y)).to.eql(",
+                  "        [Number(pm.collectionVariables.get('accountA')), Number(pm.collectionVariables.get('accountB'))]));",
+                  "pm.test('Owner name on each account', () => accts.forEach(a => pm.expect(a.userName).to.eql('Demo Customer Updated')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Create Account - Unknown Customer (expect 404)",
           "request": {
             "method": "POST",
             "header": [
@@ -425,7 +521,7 @@
           ]
         },
         {
-          "name": "4. Get All Accounts",
+          "name": "5. Get All Accounts",
           "request": {
             "method": "GET",
             "header": [],
@@ -458,7 +554,7 @@
           ]
         },
         {
-          "name": "5. Get Account By Id",
+          "name": "6. Get Account By Id",
           "request": {
             "method": "GET",
             "header": [],
@@ -488,7 +584,7 @@
           ]
         },
         {
-          "name": "6. Update Account Type",
+          "name": "7. Update Account Type",
           "request": {
             "method": "PUT",
             "header": [
@@ -533,7 +629,7 @@
           ]
         },
         {
-          "name": "7. Update Unknown Account (expect 404)",
+          "name": "8. Update Unknown Account (expect 404)",
           "request": {
             "method": "PUT",
             "header": [
@@ -576,7 +672,7 @@
           ]
         },
         {
-          "name": "8. Deposit 500",
+          "name": "9. Deposit 500",
           "request": {
             "method": "POST",
             "header": [
@@ -621,7 +717,7 @@
           ]
         },
         {
-          "name": "9. Withdraw 100",
+          "name": "10. Withdraw 100",
           "request": {
             "method": "POST",
             "header": [
@@ -666,7 +762,7 @@
           ]
         },
         {
-          "name": "10. Withdraw More Than Balance (expect 409)",
+          "name": "11. Withdraw More Than Balance (expect 409)",
           "request": {
             "method": "POST",
             "header": [
@@ -710,7 +806,7 @@
           ]
         },
         {
-          "name": "11. Deposit Zero (expect 422)",
+          "name": "12. Deposit Zero (expect 422)",
           "request": {
             "method": "POST",
             "header": [
