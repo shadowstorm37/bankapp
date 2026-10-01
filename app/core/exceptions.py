@@ -20,3 +20,11 @@ class CustomerHasAccountsError(Exception):
 
 class AccountHasBalanceError(Exception):
     pass
+
+
+class DuplicateUsernameError(Exception):
+    pass
+
+
+class InvalidCredentialsError(Exception):
+    pass

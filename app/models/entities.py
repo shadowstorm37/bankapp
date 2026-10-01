@@ -9,6 +9,9 @@ class User:
     user_id: int
     name: str
     email: str
+    # only set for customers who registered with a login; never sent to the client
+    username: Optional[str] = None
+    password_hash: Optional[str] = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 

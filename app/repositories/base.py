@@ -14,7 +14,13 @@ class UserRepository(ABC):
         ...
 
     @abstractmethod
-    def create(self, name: str, email: str) -> User:
+    def create(
+        self,
+        name: str,
+        email: str,
+        username: Optional[str] = None,
+        password_hash: Optional[str] = None,
+    ) -> User:
         ...
 
     @abstractmethod
@@ -23,6 +29,15 @@ class UserRepository(ABC):
 
     @abstractmethod
     def delete(self, user_id: int) -> bool:
+        ...
+
+    @abstractmethod
+    def find_by_username(self, username: str) -> Optional[User]:
+        ...
+
+    @abstractmethod
+    def find_by_first_name(self, first_name: str) -> List[User]:
+        # case-insensitive match on the first word of name
         ...
 
 
