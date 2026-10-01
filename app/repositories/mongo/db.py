@@ -48,6 +48,12 @@ def seed_users() -> None:
 
 
 users.create_index("email", unique=True)
+# partial: customers without a login have no username field, so they don't clash
+users.create_index(
+    "username",
+    unique=True,
+    partialFilterExpression={"username": {"$type": "string"}},
+)
 # one index per audit lookup: by account (either side), by user, by transaction
 audit.create_index("from_account_id")
 audit.create_index("to_account_id")

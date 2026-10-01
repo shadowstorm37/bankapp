@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import List
 
 from app.core.exceptions import CustomerHasAccountsError, NotFoundError
@@ -39,3 +40,12 @@ class CustomerService:
             )
 
         self.user_repo.delete(user_id)
+
+    def find_by_first_name(self, first_name: str) -> List[User]:
+        return self.user_repo.find_by_first_name(first_name)
+
+    def get_premium_customers(self, threshold: Decimal) -> List[User]:
+        # a premium customer owns at least one account at or above the threshold
+        owner_ids = sorted({a.user_id for a in self.account_repo.find_premium(threshold)})
+        users = [self.user_repo.find_by_id(uid) for uid in owner_ids]
+        return [u for u in users if u is not None]
