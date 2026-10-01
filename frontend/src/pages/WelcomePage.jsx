@@ -1,3 +1,4 @@
+import ApiStatus from '../components/ApiStatus.jsx'
 import FeatureCard from '../components/FeatureCard.jsx'
 
 const FEATURES = [
@@ -27,6 +28,7 @@ export default function WelcomePage() {
         <p className="lede">
           Manage customers and their accounts, search and filter, and sign in securely.
         </p>
+        <ApiStatus />
       </section>
       <section className="feature-grid">
         {FEATURES.map((feature) => (
