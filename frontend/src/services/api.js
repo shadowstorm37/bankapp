@@ -10,10 +10,11 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Before every request: attach the login token, if there is one
+// Before every request: attach the login token, if there is one and the
+// request didn't set its own
 api.interceptors.request.use((request) => {
   const token = getAccessToken()
-  if (token) {
+  if (token && !request.headers.Authorization) {
     request.headers.Authorization = `Bearer ${token}`
   }
   return request

@@ -15,9 +15,14 @@ export default function Header({ appName }) {
           <NavLink to="/" end className="nav-link">
             Home
           </NavLink>
-          {user && (
+          {user?.role === 'admin' && (
             <NavLink to="/customers" className="nav-link">
               Customers
+            </NavLink>
+          )}
+          {user?.role === 'customer' && (
+            <NavLink to="/profile" className="nav-link">
+              My profile
             </NavLink>
           )}
         </nav>

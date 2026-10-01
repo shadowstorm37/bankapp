@@ -36,6 +36,16 @@ export default function AuthProvider({ children }) {
     return next.user
   }, [])
 
+  // after a user edits their own profile, keep the stored user in step
+  const updateUser = useCallback((changes) => {
+    setAuth((current) => {
+      if (!current) return current
+      const next = { ...current, user: { ...current.user, ...changes } }
+      saveAuth(next)
+      return next
+    })
+  }, [])
+
   // register, then log straight in with the same username and password
   const register = useCallback(
     async (details) => {
@@ -62,8 +72,8 @@ export default function AuthProvider({ children }) {
   }, [logout])
 
   const value = useMemo(
-    () => ({ user: auth?.user ?? null, notice, login, register, logout }),
-    [auth, notice, login, register, logout],
+    () => ({ user: auth?.user ?? null, notice, login, register, logout, updateUser }),
+    [auth, notice, login, register, logout, updateUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

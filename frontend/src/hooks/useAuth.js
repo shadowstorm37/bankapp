@@ -1,7 +1,8 @@
 import { useContext } from 'react'
 import { AuthContext } from '../context/authContext.js'
 
-// Any component can call useAuth() to get { user, notice, login, register, logout }
+// Any component can call useAuth() to get
+// { user, notice, login, register, logout, updateUser }
 export default function useAuth() {
   const auth = useContext(AuthContext)
   if (!auth) {
