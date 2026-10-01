@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field, field_validator
 
 from app.core.security import MAX_PASSWORD_BYTES
@@ -28,3 +30,11 @@ class AuthUserResponse(BaseModel):
     name: str
     email: str
     username: str
+    role: str
+
+
+class LoginResponse(BaseModel):
+    accessToken: str
+    tokenType: str
+    expiresAt: datetime
+    user: AuthUserResponse

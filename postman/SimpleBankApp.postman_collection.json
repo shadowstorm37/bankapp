@@ -2233,6 +2233,7 @@
                   "const body = pm.response.json();",
                   "pm.test('Returns the new customer with username', () =>",
                   "    pm.expect(body.username).to.eql(pm.collectionVariables.get('authUsername')));",
+                  "pm.test('Registers as a customer, never admin', () => pm.expect(body.role).to.eql('customer'));",
                   "pm.test('No password or hash in the response', () => {",
                   "    pm.expect(body).to.not.have.property('password');",
                   "    pm.expect(body).to.not.have.property('password_hash');",
@@ -2369,8 +2370,14 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
                   "pm.test('Logged in as the registered customer', () =>",
-                  "    pm.expect(pm.response.json().userId).to.eql(Number(pm.collectionVariables.get('authUserId'))));"
+                  "    pm.expect(body.user.userId).to.eql(Number(pm.collectionVariables.get('authUserId'))));",
+                  "pm.test('Returns a bearer token and its expiry', () => {",
+                  "    pm.expect(body.tokenType).to.eql('bearer');",
+                  "    pm.expect(body.accessToken.split('.')).to.have.lengthOf(3);",
+                  "    pm.expect(Date.parse(body.expiresAt)).to.be.above(Date.now());",
+                  "});"
                 ]
               }
             }

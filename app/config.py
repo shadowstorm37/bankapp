@@ -14,3 +14,28 @@ CORS_ORIGINS = [
     ).split(",")
     if o.strip()
 ]
+
+
+def _required(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        _missing.append(name)
+    return value
+
+
+# login and admin settings have no defaults: the API won't start without them
+_missing: list = []
+JWT_SECRET = _required("JWT_SECRET")
+_expire = _required("JWT_EXPIRE_MINUTES")
+ADMIN_USERNAME = _required("ADMIN_USERNAME")
+ADMIN_PASSWORD = _required("ADMIN_PASSWORD")
+ADMIN_NAME = _required("ADMIN_NAME")
+ADMIN_EMAIL = _required("ADMIN_EMAIL")
+
+if _missing:
+    raise RuntimeError(
+        "Missing settings in .env: " + ", ".join(_missing) + ". See .env.example."
+    )
+if not _expire.isdigit() or int(_expire) <= 0:
+    raise RuntimeError("JWT_EXPIRE_MINUTES must be a whole number of minutes above 0")
+JWT_EXPIRE_MINUTES = int(_expire)

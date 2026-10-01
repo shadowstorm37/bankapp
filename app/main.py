@@ -1,8 +1,11 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import config
+from app.api.deps import get_auth_service
 from app.api.routes.accounts import router as accounts_router
 from app.api.routes.audit import router as audit_router
 from app.api.routes.auth import router as auth_router
@@ -14,11 +17,23 @@ from app.core.exceptions import (
     DuplicateUsernameError,
     InsufficientFundsError,
     InvalidCredentialsError,
+    NotAuthenticatedError,
     NotFoundError,
     ValidationError,
 )
 
-app = FastAPI(title="Simple Bank Application")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # runs once at startup: make sure the admin account from .env exists
+    get_auth_service().ensure_admin(
+        config.ADMIN_USERNAME, config.ADMIN_PASSWORD, config.ADMIN_NAME, config.ADMIN_EMAIL
+    )
+    yield
+
+
+app = FastAPI(title="Simple Bank Application", lifespan=lifespan)
 
 # lets the React dev server (a different origin) call the API from the browser
 app.add_middleware(
@@ -71,4 +86,9 @@ def handle_duplicate_username(request: Request, exc: DuplicateUsernameError):
 
 @app.exception_handler(InvalidCredentialsError)
 def handle_invalid_credentials(request: Request, exc: InvalidCredentialsError):
+    return JSONResponse(status_code=401, content={"error": str(exc)})
+
+
+@app.exception_handler(NotAuthenticatedError)
+def handle_not_authenticated(request: Request, exc: NotAuthenticatedError):
     return JSONResponse(status_code=401, content={"error": str(exc)})

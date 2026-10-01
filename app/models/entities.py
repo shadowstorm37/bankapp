@@ -12,6 +12,7 @@ class User:
     # only set for customers who registered with a login; never sent to the client
     username: Optional[str] = None
     password_hash: Optional[str] = None
+    role: str = "customer"  # "customer" | "admin"
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 

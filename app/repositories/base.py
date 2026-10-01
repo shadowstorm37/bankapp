@@ -20,6 +20,7 @@ class UserRepository(ABC):
         email: str,
         username: Optional[str] = None,
         password_hash: Optional[str] = None,
+        role: str = "customer",
     ) -> User:
         ...
 

@@ -19,6 +19,7 @@ class InMemoryUserRepository(UserRepository):
         email: str,
         username: Optional[str] = None,
         password_hash: Optional[str] = None,
+        role: str = "customer",
     ) -> User:
         if any(u.email == email for u in store.users.values()):
             raise DuplicateEmailError(f"Email {email} is already in use")
@@ -31,6 +32,7 @@ class InMemoryUserRepository(UserRepository):
             email=email,
             username=username,
             password_hash=password_hash,
+            role=role,
         )
         store.users[user.user_id] = user
         store.next_user_id += 1
