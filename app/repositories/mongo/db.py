@@ -15,6 +15,7 @@ counters = db["counters"]
 users = db["users"]
 accounts = db["accounts"]
 transactions = db["transactions"]
+audit = db["audit"]
 
 
 def get_next_id(counter_name: str) -> int:
@@ -47,4 +48,9 @@ def seed_users() -> None:
 
 
 users.create_index("email", unique=True)
+# one index per audit lookup: by account (either side), by user, by transaction
+audit.create_index("from_account_id")
+audit.create_index("to_account_id")
+audit.create_index("user_id")
+audit.create_index("transaction_ids")
 seed_users()
