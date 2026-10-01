@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends
+from decimal import Decimal
+from typing import List
+
+from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import get_account_service
 from app.schemas.account import (
@@ -6,6 +9,9 @@ from app.schemas.account import (
     AmountRequest,
     CreateAccountRequest,
     TransactionResponse,
+    TransferRequest,
+    TransferResponse,
+    UpdateAccountRequest,
 )
 from app.services.account_service import AccountService
 
@@ -31,6 +37,23 @@ def create_account(
     return _to_account_response(account, service)
 
 
+@router.get("", response_model=List[AccountResponse])
+def list_accounts(service: AccountService = Depends(get_account_service)):
+    return [_to_account_response(a, service) for a in service.list_accounts()]
+
+
+# must be registered before /{account_id}, or "premium" is parsed as an account_id
+@router.get("/premium", response_model=List[AccountResponse])
+def get_premium_accounts(
+    threshold: Decimal = Query(ge=0),
+    service: AccountService = Depends(get_account_service),
+):
+    return [
+        _to_account_response(a, service)
+        for a in service.get_premium_accounts(threshold)
+    ]
+
+
 @router.get("/{account_id}", response_model=AccountResponse)
 def get_account(
     account_id: int,
@@ -38,6 +61,24 @@ def get_account(
 ):
     account = service.get_account(account_id)
     return _to_account_response(account, service)
+
+
+@router.put("/{account_id}", response_model=AccountResponse)
+def update_account(
+    account_id: int,
+    body: UpdateAccountRequest,
+    service: AccountService = Depends(get_account_service),
+):
+    account = service.update_account(account_id, body.accountType)
+    return _to_account_response(account, service)
+
+
+@router.delete("/{account_id}", status_code=204)
+def delete_account(
+    account_id: int,
+    service: AccountService = Depends(get_account_service),
+):
+    service.delete_account(account_id)
 
 
 @router.post("/{account_id}/deposit", response_model=AccountResponse)
@@ -58,6 +99,21 @@ def withdraw(
 ):
     account = service.withdraw(account_id, body.amount)
     return _to_account_response(account, service)
+
+
+@router.post("/{account_id}/transfer", response_model=TransferResponse)
+def transfer(
+    account_id: int,
+    body: TransferRequest,
+    service: AccountService = Depends(get_account_service),
+):
+    from_account, to_account = service.transfer(
+        account_id, body.toAccountId, body.amount
+    )
+    return TransferResponse(
+        fromAccount=_to_account_response(from_account, service),
+        toAccount=_to_account_response(to_account, service),
+    )
 
 
 @router.get("/{account_id}/transactions", response_model=list[TransactionResponse])

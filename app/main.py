@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from app.api.routes.accounts import router as accounts_router
 from app.api.routes.customers import router as customers_router
 from app.core.exceptions import (
+    AccountHasBalanceError,
     CustomerHasAccountsError,
     DuplicateEmailError,
     InsufficientFundsError,
@@ -39,4 +40,9 @@ def handle_duplicate_email(request: Request, exc: DuplicateEmailError):
 
 @app.exception_handler(CustomerHasAccountsError)
 def handle_customer_has_accounts(request: Request, exc: CustomerHasAccountsError):
+    return JSONResponse(status_code=409, content={"error": str(exc)})
+
+
+@app.exception_handler(AccountHasBalanceError)
+def handle_account_has_balance(request: Request, exc: AccountHasBalanceError):
     return JSONResponse(status_code=409, content={"error": str(exc)})

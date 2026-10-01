@@ -13,6 +13,15 @@ class AmountRequest(BaseModel):
     amount: Decimal = Field(gt=0)
 
 
+class UpdateAccountRequest(BaseModel):
+    accountType: str
+
+
+class TransferRequest(BaseModel):
+    toAccountId: int
+    amount: Decimal = Field(gt=0)
+
+
 class AccountResponse(BaseModel):
     accountId: int
     userName: str
@@ -21,6 +30,11 @@ class AccountResponse(BaseModel):
 
     class Config:
         json_encoders = {Decimal: lambda v: float(v)}
+
+
+class TransferResponse(BaseModel):
+    fromAccount: AccountResponse
+    toAccount: AccountResponse
 
 
 class TransactionResponse(BaseModel):
