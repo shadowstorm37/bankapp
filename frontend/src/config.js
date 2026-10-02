@@ -23,9 +23,11 @@ if (!locale) problems.push('VITE_LOCALE is not set')
 
 // Intl throws on an unknown currency or locale, so check them once here
 let moneyFormat = null
+let dateFormat = null
 if (currency && locale) {
   try {
     moneyFormat = new Intl.NumberFormat(locale, { style: 'currency', currency })
+    dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' })
   } catch {
     problems.push(`VITE_CURRENCY "${currency}" or VITE_LOCALE "${locale}" isn't valid`)
   }
@@ -33,5 +35,6 @@ if (currency && locale) {
 
 export const configProblems = problems
 export const MONEY_FORMAT = moneyFormat
+export const DATE_FORMAT = dateFormat
 export const API_URL = apiUrl ? apiUrl.replace(/\/+$/, '') : ''
 export const API_TIMEOUT_MS = timeoutMs

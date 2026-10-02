@@ -7,6 +7,7 @@ import CustomerDetailPage from './pages/CustomerDetailPage.jsx'
 import CustomersPage from './pages/CustomersPage.jsx'
 import EditCustomerPage from './pages/EditCustomerPage.jsx'
 import EditProfilePage from './pages/EditProfilePage.jsx'
+import AccountPage from './pages/AccountPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
@@ -25,6 +26,8 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route path="profile" element={<ProfilePage />} />
           <Route path="profile/edit" element={<EditProfilePage />} />
+          {/* the API allows the owner or an admin */}
+          <Route path="accounts/:id" element={<AccountPage />} />
           {/* admins only */}
           <Route element={<RequireAdmin />}>
             <Route path="customers" element={<CustomersPage />} />

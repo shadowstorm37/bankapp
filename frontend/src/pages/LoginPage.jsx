@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import ErrorMessage from '../components/ErrorMessage.jsx'
 import FormField from '../components/FormField.jsx'
 import useAuth from '../hooks/useAuth.js'
@@ -8,17 +8,17 @@ import { homePathFor } from '../utils/homePath.js'
 
 export default function LoginPage() {
   const { user, notice, login } = useAuth()
-  const navigate = useNavigate()
   const location = useLocation()
   const [values, setValues] = useState({ username: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
-  // already logged in: nothing to do here
-  if (user) return <Navigate to={homePathFor(user)} replace />
-
   // set by RequireAuth: the page to return to after logging in
   const from = location.state?.from
+
+  // logged in (already, or a moment ago through the form below): leave for
+  // the page they were heading to, or their home page
+  if (user) return <Navigate to={from ?? homePathFor(user)} replace />
 
   function handleChange(event) {
     setValues({ ...values, [event.target.name]: event.target.value })
@@ -29,8 +29,8 @@ export default function LoginPage() {
     setSubmitting(true)
     setError(null)
     try {
-      const loggedIn = await login(values)
-      navigate(from ?? homePathFor(loggedIn), { replace: true })
+      // success sets `user`, and the redirect above takes over
+      await login(values)
     } catch (err) {
       setError(getErrorMessage(err))
       setSubmitting(false)

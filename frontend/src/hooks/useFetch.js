@@ -8,19 +8,25 @@ export default function useFetch(fetchFn, deps = []) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [errorStatus, setErrorStatus] = useState(null)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
     setLoading(true)
     setError(null)
+    setErrorStatus(null)
 
     fetchFn({ signal: controller.signal })
       .then((result) => setData(result))
       .catch((err) => {
         const message = getErrorMessage(err)
         // null means the request was cancelled on purpose: not an error
-        if (message) setError(message)
+        if (message) {
+          setError(message)
+          // e.g. 403 or 404, so a page can show something more specific
+          setErrorStatus(err.response?.status ?? null)
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false)
@@ -37,5 +43,5 @@ export default function useFetch(fetchFn, deps = []) {
 
   // setData lets a page update what it shows (e.g. remove a deleted row)
   // without fetching everything again
-  return { data, setData, loading, error, reload }
+  return { data, setData, loading, error, errorStatus, reload }
 }

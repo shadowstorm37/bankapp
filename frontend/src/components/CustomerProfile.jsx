@@ -2,15 +2,18 @@ import { Link } from 'react-router-dom'
 import AccountsTable from './AccountsTable.jsx'
 import EmptyState from './EmptyState.jsx'
 import ErrorMessage from './ErrorMessage.jsx'
+import OpenAccountForm from './OpenAccountForm.jsx'
 import Spinner from './Spinner.jsx'
+import useAuth from '../hooks/useAuth.js'
 import useFetch from '../hooks/useFetch.js'
 import customerService from '../services/customerService.js'
 
 // A customer's details and accounts. Used by two pages through props:
 // an admin viewing /customers/:id, and a customer viewing their own /profile
 export default function CustomerProfile({ customerId, isOwnProfile }) {
+  const { user } = useAuth()
   // the customer and their accounts load together; refetches if the id changes
-  const { data, loading, error, reload } = useFetch(
+  const { data, setData, loading, error, reload } = useFetch(
     ({ signal }) =>
       Promise.all([
         customerService.getById(customerId, { signal }),
@@ -57,6 +60,13 @@ export default function CustomerProfile({ customerId, isOwnProfile }) {
         />
       ) : (
         <AccountsTable accounts={accounts} />
+      )}
+      {/* only admins can open accounts; the new one joins the table above */}
+      {user.role === 'admin' && (
+        <OpenAccountForm
+          customerId={customerId}
+          onOpened={(account) => setData([customer, [...accounts, account]])}
+        />
       )}
     </div>
   )

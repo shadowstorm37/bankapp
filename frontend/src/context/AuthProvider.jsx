@@ -15,6 +15,9 @@ export default function AuthProvider({ children }) {
   // Kept here rather than in the redirect, because a protected page's own
   // redirect to /login (RequireAuth) can replace ours
   const [notice, setNotice] = useState(null)
+  // true from a logout until the next login, so RequireAuth doesn't send the
+  // next person to log in back to the page the last one was on
+  const [loggedOut, setLoggedOut] = useState(false)
   const navigate = useNavigate()
 
   const logout = useCallback(
@@ -22,6 +25,7 @@ export default function AuthProvider({ children }) {
       clearAuth()
       setAuth(null)
       setNotice(message ?? null)
+      setLoggedOut(true)
       navigate('/login', { replace: true })
     },
     [navigate],
@@ -33,6 +37,7 @@ export default function AuthProvider({ children }) {
     saveAuth(next)
     setAuth(next)
     setNotice(null)
+    setLoggedOut(false)
     return next.user
   }, [])
 
@@ -72,8 +77,8 @@ export default function AuthProvider({ children }) {
   }, [logout])
 
   const value = useMemo(
-    () => ({ user: auth?.user ?? null, notice, login, register, logout, updateUser }),
-    [auth, notice, login, register, logout, updateUser],
+    () => ({ user: auth?.user ?? null, notice, loggedOut, login, register, logout, updateUser }),
+    [auth, notice, loggedOut, login, register, logout, updateUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
