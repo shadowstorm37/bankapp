@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import useAuth from '../hooks/useAuth.js'
 import useFetch from '../hooks/useFetch.js'
 import ForbiddenPage from '../pages/ForbiddenPage.jsx'
 import NotFoundPage from '../pages/NotFoundPage.jsx'
 import accountService from '../services/accountService.js'
 import { formatMoney } from '../utils/format.js'
+import { MONEY_ACTIONS } from '../utils/moneyActions.js'
 import EmptyState from './EmptyState.jsx'
 import ErrorMessage from './ErrorMessage.jsx'
 import MoneyForm from './MoneyForm.jsx'
@@ -13,12 +14,6 @@ import Spinner from './Spinner.jsx'
 import Tabs from './Tabs.jsx'
 import TransactionsTable from './TransactionsTable.jsx'
 import TransferForm from './TransferForm.jsx'
-
-const ACTIONS = [
-  { id: 'deposit', label: 'Deposit' },
-  { id: 'withdraw', label: 'Withdraw' },
-  { id: 'transfer', label: 'Transfer' },
-]
 
 // One account: its balance, the deposit / withdraw / transfer forms and its
 // transaction history. The API decides who may see it (the owner or an admin)
@@ -36,7 +31,11 @@ export default function AccountDetail({ accountId }) {
     ({ signal }) => accountService.getTransactions(accountId, { signal }),
     [accountId],
   )
-  const [action, setAction] = useState(ACTIONS[0].id)
+  // which form is showing comes from the URL (/accounts/5?action=withdraw),
+  // so the buttons in the accounts table can open the right one
+  const [params, setParams] = useSearchParams()
+  const requested = params.get('action')
+  const action = MONEY_ACTIONS.some((a) => a.id === requested) ? requested : MONEY_ACTIONS[0].id
   // "Deposited $50.00.", shown after a successful action
   const [confirmation, setConfirmation] = useState(null)
 
@@ -69,7 +68,7 @@ export default function AccountDetail({ accountId }) {
   }
 
   function chooseAction(id) {
-    setAction(id)
+    setParams({ action: id }, { replace: true })
     setConfirmation(null)
   }
 
@@ -102,7 +101,7 @@ export default function AccountDetail({ accountId }) {
       </div>
 
       <h2>Move money</h2>
-      <Tabs label="Move money" tabs={ACTIONS} active={action} onChange={chooseAction} />
+      <Tabs label="Move money" tabs={MONEY_ACTIONS} active={action} onChange={chooseAction} />
       <div className="stack narrow">
         {confirmation && (
           <div className="alert alert-info" role="status">
