@@ -80,7 +80,7 @@ class MongoUserRepository(UserRepository):
         return _to_user(doc) if doc else None
 
     def find_by_first_name(self, first_name: str) -> List[User]:
-        # first word of name, case-insensitive; re.escape keeps input literal
-        pattern = "^" + re.escape(first_name.strip()) + r"(\s|$)"
+        # start of name, case-insensitive; re.escape keeps input literal
+        pattern = "^" + re.escape(first_name.strip())
         docs = db.users.find({"name": {"$regex": pattern, "$options": "i"}})
         return [_to_user(doc) for doc in docs]

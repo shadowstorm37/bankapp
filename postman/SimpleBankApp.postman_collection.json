@@ -1198,15 +1198,55 @@
                   "const found = pm.response.json();",
                   "pm.test('Finds the demo customer (case-insensitive)', () =>",
                   "    pm.expect(found.map(c => c.userId)).to.include(Number(pm.collectionVariables.get('customerId'))));",
-                  "pm.test('Every match has that first name', () =>",
-                  "    found.forEach(c => pm.expect(c.name.split(' ')[0].toLowerCase()).to.eql('demo')));"
+                  "pm.test('Every match starts with that name', () =>",
+                  "    found.forEach(c => pm.expect(c.name.toLowerCase().startsWith('demo')).to.eql(true)));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "7. Search By Last Name Finds Nothing",
+          "name": "7. Search By The First Letters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/search?firstName=dE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "firstName",
+                  "value": "dE"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const found = pm.response.json();",
+                  "pm.test('The first letters are enough to find the demo customer', () =>",
+                  "    pm.expect(found.map(c => c.userId)).to.include(Number(pm.collectionVariables.get('customerId'))));",
+                  "pm.test('Every match starts with those letters, in any case', () =>",
+                  "    found.forEach(c => pm.expect(c.name.toLowerCase().startsWith('de')).to.eql(true)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Search By Last Name Finds Nothing",
           "request": {
             "method": "GET",
             "header": [],
@@ -1243,7 +1283,7 @@
           ]
         },
         {
-          "name": "8. Search Without First Name (expect 422)",
+          "name": "9. Search Without First Name (expect 422)",
           "request": {
             "method": "GET",
             "header": [],

@@ -63,8 +63,4 @@ class InMemoryUserRepository(UserRepository):
 
     def find_by_first_name(self, first_name: str) -> List[User]:
         target = first_name.strip().lower()
-        return [
-            u
-            for u in store.users.values()
-            if u.name.split() and u.name.split()[0].lower() == target
-        ]
+        return [u for u in store.users.values() if u.name.lower().startswith(target)]

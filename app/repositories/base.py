@@ -38,7 +38,7 @@ class UserRepository(ABC):
 
     @abstractmethod
     def find_by_first_name(self, first_name: str) -> List[User]:
-        # case-insensitive match on the first word of name
+        # customers whose name starts with this text, case-insensitive
         ...
 
 
