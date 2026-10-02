@@ -27,12 +27,23 @@ from app.core.exceptions import (
 
 
 
+_admin_checked = False
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # runs once at startup: make sure the admin account from .env exists
-    get_auth_service().ensure_admin(
-        config.ADMIN_USERNAME, config.ADMIN_PASSWORD, config.ADMIN_NAME, config.ADMIN_EMAIL
-    )
+    # make sure the admin account from the settings exists. Guarded so it runs
+    # once per process: uvicorn calls this at startup, but on AWS Lambda
+    # (Mangum) it is called on every request
+    global _admin_checked
+    if not _admin_checked:
+        get_auth_service().ensure_admin(
+            config.ADMIN_USERNAME,
+            config.ADMIN_PASSWORD,
+            config.ADMIN_NAME,
+            config.ADMIN_EMAIL,
+        )
+        _admin_checked = True
     yield
 
 
@@ -106,3 +117,11 @@ def handle_permission_denied(request: Request, exc: PermissionDeniedError):
 @app.exception_handler(AdminAccountProtectedError)
 def handle_admin_protected(request: Request, exc: AdminAccountProtectedError):
     return JSONResponse(status_code=409, content={"error": str(exc)})
+
+
+# AWS Lambda entry point (handler: app.main.handler). Mangum translates a
+# Lambda Function URL event into a request for the FastAPI app above; running
+# locally with uvicorn doesn't use it
+from mangum import Mangum  # noqa: E402
+
+handler = Mangum(app)

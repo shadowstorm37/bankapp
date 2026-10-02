@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 .venv/
 .env
+
+# AWS Lambda build output and its settings file (holds secrets)
+build/
+lambda.zip
+lambda-env.json
