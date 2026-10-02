@@ -524,6 +524,7 @@
                 "exec": [
                   "pm.test('Status is 201', () => pm.response.to.have.status(201));",
                   "pm.test('balance is 0', () => pm.expect(Number(pm.response.json().balance)).to.eql(0));",
+                  "pm.test('userId is the owner', () => pm.expect(pm.response.json().userId).to.eql(Number(pm.collectionVariables.get('customerId'))));",
                   "pm.collectionVariables.set('accountA', pm.response.json().accountId);"
                 ]
               }
@@ -602,7 +603,8 @@
                   "pm.test('Both new accounts and no others', () =>",
                   "    pm.expect(accts.map(a => a.accountId).sort((x, y) => x - y)).to.eql(",
                   "        [Number(pm.collectionVariables.get('accountA')), Number(pm.collectionVariables.get('accountB'))]));",
-                  "pm.test('Owner name on each account', () => accts.forEach(a => pm.expect(a.userName).to.eql('Demo Customer Updated')));"
+                  "pm.test('Owner name on each account', () => accts.forEach(a => pm.expect(a.userName).to.eql('Demo Customer Updated')));",
+                  "pm.test('Owner id on each account', () => accts.forEach(a => pm.expect(a.userId).to.eql(Number(pm.collectionVariables.get('customerId')))));"
                 ]
               }
             }
@@ -3431,7 +3433,9 @@
                 "exec": [
                   "pm.test('Status is 200', () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
-                  "pm.test('balance is 60', () => pm.expect(Number(body.fromAccount.balance)).to.eql(60));"
+                  "pm.test('balance is 60', () => pm.expect(Number(body.fromAccount.balance)).to.eql(60));",
+                  "pm.test('destination balance is hidden from a non-owner', () => pm.expect(body.toAccount.balance).to.eql(null));",
+                  "pm.test('destination account is still named', () => pm.expect(body.toAccount.accountId).to.eql(Number(pm.collectionVariables.get('otherAccount'))));"
                 ]
               }
             }

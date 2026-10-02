@@ -15,6 +15,7 @@ from app.schemas.account import (
     AmountRequest,
     CreateAccountRequest,
     TransactionResponse,
+    TransferDestinationResponse,
     TransferRequest,
     TransferResponse,
     UpdateAccountRequest,
@@ -25,13 +26,15 @@ router = APIRouter(prefix="/api/accounts", tags=["accounts"])
 
 # Admin-only routes use require_admin. Routes on one account use
 # get_accessible_account: the owner or an admin. For a transfer that's the
-# source account; the destination can belong to anyone.
+# source account; the destination can belong to anyone, so its balance is only
+# returned to its owner or an admin.
 
 
 def _to_account_response(account, service: AccountService) -> AccountResponse:
     user = service.user_repo.find_by_id(account.user_id)
     return AccountResponse(
         accountId=account.account_id,
+        userId=account.user_id,
         userName=user.name if user else "",
         accountType=account.account_type,
         balance=account.balance,
@@ -156,9 +159,17 @@ def transfer(
     from_account, to_account = service.transfer(
         account_id, body.toAccountId, body.amount, current
     )
+    destination = _to_account_response(to_account, service)
+    may_see_balance = current.role == "admin" or to_account.user_id == current.user_id
     return TransferResponse(
         fromAccount=_to_account_response(from_account, service),
-        toAccount=_to_account_response(to_account, service),
+        toAccount=TransferDestinationResponse(
+            accountId=destination.accountId,
+            userId=destination.userId,
+            userName=destination.userName,
+            accountType=destination.accountType,
+            balance=destination.balance if may_see_balance else None,
+        ),
     )
 
 

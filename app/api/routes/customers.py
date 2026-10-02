@@ -77,6 +77,7 @@ def get_customer_accounts(
     return [
         AccountResponse(
             accountId=a.account_id,
+            userId=user.user_id,
             userName=user.name,
             accountType=a.account_type,
             balance=a.balance,

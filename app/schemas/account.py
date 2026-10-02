@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -24,6 +25,7 @@ class TransferRequest(BaseModel):
 
 class AccountResponse(BaseModel):
     accountId: int
+    userId: int
     userName: str
     accountType: str
     balance: Decimal
@@ -32,9 +34,14 @@ class AccountResponse(BaseModel):
         json_encoders = {Decimal: lambda v: float(v)}
 
 
+class TransferDestinationResponse(AccountResponse):
+    # None unless the caller owns the destination account or is an admin
+    balance: Optional[Decimal] = None
+
+
 class TransferResponse(BaseModel):
     fromAccount: AccountResponse
-    toAccount: AccountResponse
+    toAccount: TransferDestinationResponse
 
 
 class TransactionResponse(BaseModel):
