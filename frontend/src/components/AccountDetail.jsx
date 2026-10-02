@@ -10,6 +10,7 @@ import EmptyState from './EmptyState.jsx'
 import ErrorMessage from './ErrorMessage.jsx'
 import MoneyForm from './MoneyForm.jsx'
 import Spinner from './Spinner.jsx'
+import Tabs from './Tabs.jsx'
 import TransactionsTable from './TransactionsTable.jsx'
 import TransferForm from './TransferForm.jsx'
 
@@ -101,19 +102,7 @@ export default function AccountDetail({ accountId }) {
       </div>
 
       <h2>Move money</h2>
-      <div className="tabs" role="group" aria-label="Move money">
-        {ACTIONS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            className={id === action ? 'button' : 'button button-secondary'}
-            aria-pressed={id === action}
-            onClick={() => chooseAction(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Tabs label="Move money" tabs={ACTIONS} active={action} onChange={chooseAction} />
       <div className="stack narrow">
         {confirmation && (
           <div className="alert alert-info" role="status">

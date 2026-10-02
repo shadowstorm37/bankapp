@@ -22,7 +22,8 @@ const CARDS = {
   admin: [
     {
       title: 'Customers',
-      description: 'Browse, add and remove customers, and see the accounts each one owns.',
+      description:
+        'Browse, search, add and remove customers, and see the accounts each one owns.',
       to: '/customers',
     },
   ],
